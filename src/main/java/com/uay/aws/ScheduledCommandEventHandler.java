@@ -3,6 +3,7 @@ package com.uay.aws;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.uay.aws.domain.Order;
 import com.uay.aws.domain.ScheduledEvent;
 import com.uay.aws.service.DynamoDbService;
 import com.uay.aws.service.SqsService;
@@ -19,10 +20,11 @@ public class ScheduledCommandEventHandler implements RequestHandler<ScheduledEve
         LambdaLogger logger = context.getLogger();
         logger.log("event = " + event.toJson());
 
-        Map<String, String> receivedMessages = sqsService.getMessages(logger);
-        dynamoDbService.postMessages(logger, receivedMessages);
-        sqsService.deleteMessages(logger, receivedMessages);
+        Map<String, Order> receivedOrders = sqsService.getOrders(logger);
+        dynamoDbService.processOrders(logger, receivedOrders);
+        sqsService.deleteOrders(logger, receivedOrders);
 
+        logger.log("Finished CQRS connector");
         return "Finished processing event";
     }
 }
